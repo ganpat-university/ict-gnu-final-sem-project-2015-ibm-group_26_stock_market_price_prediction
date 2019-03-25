@@ -6,7 +6,7 @@ Created on Tue Mar  5 09:14:06 2019
 """
 import os
 import quandl
-quandl.ApiConfig.api_key = "LZeiFF8D_tvy6V2aj-Ca"
+quandl.ApiConfig.api_key = ""
 import tweepy as tp
 from datetime import date, timedelta
 from textblob import TextBlob
@@ -32,10 +32,10 @@ def get_stock_data(stock_name, first_time=False):
         data.to_csv(path, mode='a', header=False)
     
 def get_news_data(stock_name,first_time=False):
-    consumer_key = 'buIbsIcCmFz4TtjMZhkle5yj9'
-    consumer_secret = 'UGkwtPUgeZHsYMtnFoMUfhkSGQPqGPKpIvurwxRVucIeCadXjG'
-    access_token = '2740611399-EG4rVgPrIduzCi2FUgTnRYuP5hAXITRA6NV0eTv'
-    access_token_secret = 'YsbFiqYxL1LH9gVEtpHyoRMf7hDfbUlNQW8V8qNp1h84o'
+    consumer_key = ''
+    consumer_secret = ''
+    access_token = ''
+    access_token_secret = ''
     auth = tp.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     api = tp.API(auth)
