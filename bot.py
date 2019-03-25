@@ -155,7 +155,7 @@ def model_accuracy(model, x_train, y_train, x_test, y_test):
 
 
 def main():
-    TOKEN = "408483282:AAG5ASzp_wHcoFn52FUjLZ6rlR2p_oGaYtg"
+    TOKEN = ""
     updater = Updater(TOKEN)
     
     dp = updater.dispatcher
