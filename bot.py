@@ -19,6 +19,7 @@ import visualize as vs
 import stock_data as sd
 from keras.models import load_model
 
+stock_list = {'HDFCBANK':'HDFCBANK', 'BAJAJ-AUTO':'BAJAJ-AUTO', 'HDFCLIFE':'HDFCLIFE', 'TCS':'TCS', 'RIIL':'RIIL', 'TATAPOWER':'TATAPOWER','INDIGO':'INDIGO', 'BPCL':'BPCL', 'BRITANNIA':'BRITANNIA', 'TATASTEEL':'TATASTEEL'}
 #enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,8 +35,9 @@ def start(bot, update):
     
 def get_stock_data(bot, update):
     message = update.message.text.split(" ")
-    if message[-1] == "IBM":
-        stock_code = "EOD/IBM"
+    stock_code = stock_list[message[-1]]
+    #if message[-1] == "IBM":
+    #    stock_code = "EOD/IBM"
     first_time = check_first_time(message[-1])
     historical_data.get_stock_data(stock_code, first_time)
     update.message.reply_text("Stock Data Fetched.")
@@ -43,6 +45,7 @@ def get_stock_data(bot, update):
 def get_news_data(bot, update):
     message = update.message.text.split(" ")
     stock_name = message[-1]
+    #stock_code = stock_list[stock_name]
     #first_time = check_first_time(message[-1]+"_news")
     historical_data.get_news_data(stock_name)
     update.message.reply_text("News Data Fetched.")
@@ -64,8 +67,14 @@ def predict_future(bot, update):
         #print(i)
         p = i
     #print(str(p[0]))
-    update.message.reply_text("Tommorow's price will be:"+str(p[0]))
+    update.message.reply_text("Next Closing price will be:"+str(p[0]))
 
+def list_stocks(bot, update):
+	l = ""
+	for i in stock_list.keys():
+		l+=i+"\n"
+	update.message.reply_text(l)
+	
 def run(bot, update):
     get_stock_data(bot, update)
     get_news_data(bot, update)
@@ -74,7 +83,7 @@ def run(bot, update):
 
 def help(bot, update):
     """send a message when the command /help is issued"""
-    reply = "send /get_stock_data stock_name to fetch stock data."
+    reply = '''send /run stock_name to fetch stock data.\n send /predict stock_name to predict next closing price.\n send /list to see available stocks.'''
     update.message.reply_text(reply)
 
 def check_first_time(stock_name):
@@ -87,16 +96,11 @@ def check_first_time(stock_name):
 def preprocess(stock_name, test_data_size = 200):
     path = os.getcwd() + "/data/" + stock_name + ".csv"
     data = pd.read_csv(path)
+    data = data.dropna(how='any', axis=0)
     stocks = ppd.remove_data(data)
     #print(stocks.tail())
     stocks, sc_close = ppd.get_normalised_data(stocks)
-    #print(stocks.head())
-    #stocks.to_csv('../data/IBM_preprocessed.csv', index=False)
-
-
-    #stocks = pd.read_csv('../data/IBM_preprocessed.csv')
-    stocks_data = stocks.drop(['Item'], axis=1)
-    stocks_data.dropna(how='any', axis=0)
+    stocks_data = stocks.dropna(how='any', axis=0)
     unroll_length = 50
     #test_data_size = 200
     x_train, x_test, y_train, y_test = sd.train_test_split_lstm(stocks_data, prediction_time = 1, unroll_length = unroll_length, test_data_size=test_data_size)
@@ -123,10 +127,7 @@ def train_model(stock_name, x_train, y_train, x_test, y_test, sc_close ,unroll_l
         #start = time.time()
         model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2, validation_split=0.05)
         model.save(os.getcwd() + "/data/" + stock_name+".h5")
-        prediction = model.predict(x_test, batch_size=batch_size)
-        prediction = sc_close.inverse_transform(prediction)
-        #print(prediction)
-        y_test = sc_close.inverse_transform(y_test)
+        
     else:
         if not os.path.isfile(os.getcwd() + "/data/" + stock_name+".h5"):
             model = lstm.lstm_model(x_train.shape[-1], output_dim=unroll_length, return_sequences=True)
@@ -138,11 +139,11 @@ def train_model(stock_name, x_train, y_train, x_test, y_test, sc_close ,unroll_l
             #print('training_time', time.time() - start)
         else:
             model = load_model(os.getcwd() + "/data/" + stock_name+".h5")
-            prediction = model.predict(x_test, batch_size=batch_size)
-            prediction = sc_close.inverse_transform(prediction)
-            #print(prediction)
-            y_test = sc_close.inverse_transform(y_test)
-            #vs.plot_lstm_prediction(y_test, prediction)
+    prediction = model.predict(x_test, batch_size=batch_size)
+    prediction = sc_close.inverse_transform(prediction)
+    #print(prediction)
+    y_test = sc_close.inverse_transform(y_test)
+    #vs.plot_lstm_prediction(y_test, prediction)
     return model, prediction
 
 def model_accuracy(model, x_train, y_train, x_test, y_test):
@@ -155,7 +156,7 @@ def model_accuracy(model, x_train, y_train, x_test, y_test):
 
 
 def main():
-    TOKEN = ""
+    TOKEN = "408483282:AAG5ASzp_wHcoFn52FUjLZ6rlR2p_oGaYtg"
     updater = Updater(TOKEN)
     
     dp = updater.dispatcher
@@ -168,6 +169,7 @@ def main():
     dp.add_handler(CommandHandler("get_news_data", get_news_data))
     dp.add_handler(CommandHandler("train", train))
     dp.add_handler(CommandHandler("predict", predict_future))
+    dp.add_handler(CommandHandler("list", list_stocks))
     dp.add_error_handler(error)
     #start the Bot
     updater.start_polling()

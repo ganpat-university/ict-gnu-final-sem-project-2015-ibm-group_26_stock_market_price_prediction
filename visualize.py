@@ -4,7 +4,8 @@ Created on Tue Mar 19 09:17:03 2019
 
 @author: djsma
 """
-
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = (18, 12)
 
@@ -12,7 +13,7 @@ plt.rcParams['figure.figsize'] = (18, 12)
 def price(x):
     return '$%1.2f' % x
 
-def plot_lstm_prediction(actual, prediction, title='Actual vs Prediction', y_label='Price USD', x_label='Trading Days'):
+def plot_lstm_prediction(message, actual, prediction, title='Actual vs Prediction', y_label='Price USD', x_label='Trading Days'):
     
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -30,6 +31,6 @@ def plot_lstm_prediction(actual, prediction, title='Actual vs Prediction', y_lab
     ax.set_title(title)
     ax.legend(loc='upper left')
 
-    plt.savefig('../data/result.png')
-    plt.show()
+    plt.savefig('../static/img/'+message+'result.png')
+    #plt.show()
     
